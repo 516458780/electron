@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+<head>
+    <title>My First Electron App</title>
+    <style type="text/css">
+        *{
+            -webkit-app-region: no-drag;
+            -webkit-user-select: none;/*禁止文字被选中*/
+        }
+        html,body {
+            margin: 0;
+            -webkit-app-region: drag;
+        }
+
+        textarea {
+            width: 100%;
+            border: none;
+            background: #eee;
+            margin: 10px 0;
+            padding: 0;
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+<textarea rows="10"></textarea>
+<button>Write</button>
+<br><br>
+<button>close</button>
+</body>
+<script>
+    var electron = require('electron');
+    var ipc = electron.ipcRenderer;
+    var fs = require('fs');
+    var textarea = document.getElementsByTagName('textarea')[0];
+    var button = document.getElementsByTagName('button')[0];
+    var close = document.getElementsByTagName('button')[1];
+
+    function writeFile() {
+        console.log('asdfaf');
+        var text = textarea.value;
+        fs.writeFileSync('message.txt', text, 'utf8');
+    }
+    function closeWin() {
+        ipc.send('close-main-window');
+    }
+    button.onclick = writeFile;
+    close.onclick = closeWin;
+
+    ipc.on('testShortcut', function (event, message) {
+        alert('had click '+message);
+    });
+
+
+</script>
+</html>
