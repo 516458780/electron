@@ -1,0 +1,196 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+    <title>Clock</title>
+    <style type="text/css">
+        *{
+            /*-webkit-app-region: no-drag;*/
+            -webkit-user-select: none;/*禁止文字被选中*/
+            cursor:default;
+        }
+        html,body {
+            margin: 0;
+            -webkit-app-region: drag;
+        }
+
+        .clock_border {
+            position: relative;
+            top:0;
+            left:0;
+            width:200px;
+            height:200px;
+            border:5px solid #4b4b4b;
+
+            -webkit-border-radius:100px;
+            -moz-border-radius:100px;
+            border-radius:100px;
+
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            box-sizing: border-box;
+        }
+        .clock-num {
+            position: absolute;
+            top:50%;
+            left:50%;
+            width:calc(100px - 8px);
+
+            text-align: right;
+            font-size: 24px;
+
+            -webkit-transform-origin:left center;
+            -moz-transform-origin:left center;
+            -ms-transform-origin:left center;
+            -o-transform-origin:left center;
+            transform-origin:left center;
+            transform: translate(0, -50%);
+        }
+        .clock-num span {
+            -webkit-transform-origin:center center;
+            -moz-transform-origin:center center;
+            -ms-transform-origin:center center;
+            -o-transform-origin:center center;
+            transform-origin:center center;
+            display: inline-block;
+        }
+
+        #hours,#mimutes,#seconds {
+            position: absolute;
+            top:50%;
+            left:50%;
+
+            -webkit-transform-origin:center bottom;
+            -moz-transform-origin:center bottom;
+            -ms-transform-origin:center bottom;
+            -o-transform-origin:center bottom;
+            transform-origin:center bottom;
+            transform: translate(-50%, -100%);
+        }
+        #hours {
+            width:6px;
+            height:50px;
+            background-color: #4b4b4b;
+            -webkit-border-radius:3px;
+            -moz-border-radius:3px;
+            border-radius:3px;
+        }
+        #mimutes {
+            width:4px;
+            height:65px;
+            background-color: #b39746;
+            -webkit-border-radius:2px;
+            -moz-border-radius:2px;
+            border-radius:2px;
+        }
+        #seconds {
+            width:1px;
+            height:80px;
+            background-color: #828db3;
+        }
+        #top {
+            position: fixed;
+            top:0;
+            left:0;
+            width:100%;
+            content: ' ';
+
+            -webkit-app-region: no-drag;
+            /*-webkit-transform: translate(-100%, 0);*/
+            /*-moz-transform: translate(-100%, 0);*/
+            /*-ms-transform: translate(-100%, 0);*/
+            /*-o-transform: translate(-100%, 0);*/
+            /*transform: translate(-100%, 0);*/
+            z-index: 90;
+        }
+        #setting {
+            float: left;
+            font-size: 16px;
+        }
+        #close {
+            float: right;
+            font-size: 24px;
+            margin-top: -4px;
+        }
+    </style>
+</head>
+<body>
+<div class="clock_border">
+    <div class="clock-num"><span>3</span></div>
+    <div class="clock-num"><span>6</span></div>
+    <div class="clock-num"><span>9</span></div>
+    <div class="clock-num"><span>12</span></div>
+
+    <div id="hours"></div>
+    <div id="mimutes"></div>
+    <div id="seconds"></div>
+</div>
+
+<div id="top">
+    <span id="setting">۞</span>
+    <span id="close">×</span>
+</div>
+</body>
+<script>
+    (function () {
+        function changeColor() {
+            var fs = require('fs');
+            fs.readFile('config.txt', (err, data)=>{
+                if(err) alert(err);
+                data = JSON.parse(data);
+                document.getElementsByClassName('clock_border')[0].style.backgroundColor = data.bgColor;
+                document.getElementById('hours').style.backgroundColor = data.hourColor;
+                document.getElementById('mimutes').style.backgroundColor = data.minuteColor;
+                document.getElementById('seconds').style.backgroundColor = data.secondColor;
+            });
+        }
+        function drawClock() {
+            var date = new Date();
+            var hour = date.getHours()%12/12*360 + date.getMinutes()/60*(360/12);
+            var mimute = date.getMinutes()/60*360 + date.getSeconds()/60*(360/60);
+            var second = date.getSeconds()/60*360;
+
+            hours.style.webkitTransform = 'translate(-50%, -100%) rotate('+hour+'deg)';
+            mimutes.style.webkitTransform = 'translate(-50%, -100%) rotate('+mimute+'deg)';
+            seconds.style.webkitTransform = 'translate(-50%, -100%) rotate('+second+'deg)';
+        }
+
+        var eachdeg = 360 / 4;
+        var clock_num = document.getElementsByClassName('clock-num');
+        for(let n=0; n<clock_num.length; n++){
+            clock_num[n].style.webkitTransform = 'translate(0, -50%) rotate('+(eachdeg*n)+'deg)';
+            clock_num[n].getElementsByTagName('span')[0].style.webkitTransform = 'rotate(-'+(eachdeg*n)+'deg)';
+        }
+        var hours = document.getElementById('hours');
+        var mimutes = document.getElementById('mimutes');
+        var seconds = document.getElementById('seconds');
+        changeColor();
+        drawClock();
+        setInterval(drawClock, 1000);
+
+        //监听线程事件
+        function openSettingWindow() {
+            ipc.send('open-setting-window');
+        }
+        function closeWin() {
+            ipc.send('close-main-window');
+        }
+
+        var electron = require('electron');
+        var ipc = electron.ipcRenderer;
+        var setting = document.getElementById('setting');
+        var close = document.getElementById('close');
+        setting.onclick = openSettingWindow;
+        close.onclick = closeWin;
+        ipc.on('testShortcut', function (event, message) {
+            alert('clock had click '+message);
+        });
+        ipc.on('change-color', function (event, message) {
+            changeColor();
+        });
+    })();
+
+
+</script>
+</html>

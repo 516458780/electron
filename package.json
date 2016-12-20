@@ -10,5 +10,9 @@
   "license": "ISC",
   "devDependencies": {
     "electron-prebuilt": "^1.4.12"
+  },
+  "dependencies": {
+    "querystring": "^0.2.0",
+    "remote": "^0.2.6"
   }
 }

@@ -1,50 +1,102 @@
 <!doctype html>
 <html>
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
     <title>My First Electron App</title>
     <style type="text/css">
         *{
             -webkit-app-region: no-drag;
             -webkit-user-select: none;/*禁止文字被选中*/
         }
-        html,body {
+        html,body,#app {
             margin: 0;
             -webkit-app-region: drag;
         }
 
-        textarea {
-            width: 100%;
-            border: none;
-            background: #eee;
-            margin: 10px 0;
-            padding: 0;
-            outline: none;
+        #app {
+            padding:10px;
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            box-sizing: border-box;
+        }
+        .eachLine {
+            height:50px;
+            line-height: 50px;
+        }
+        .eachLine .lineType {
+            width:70px;
+            height:100%;
+            vertical-align: top;
+            display: inline-block;
+        }
+        .eachLine .lineValue {
+            width:calc(100% - 90px);
+            height:100%;
+            vertical-align: top;
+            display: inline-block;
         }
     </style>
 </head>
 <body>
-<textarea rows="10"></textarea>
-<button>Write</button>
-<br><br>
-<button>close</button>
+<div id="app">
+    <div class="eachLine">
+        <div class="lineType">背景颜色</div>
+        <input type="color" id="bgColor" class="lineValue" />
+    </div>
+    <div class="eachLine">
+        <div class="lineType">时针颜色</div>
+        <input type="color" id="hourColor" class="lineValue" />
+    </div>
+    <div class="eachLine">
+        <div class="lineType">分针颜色</div>
+        <input type="color" id="minuteColor" class="lineValue" />
+    </div>
+    <div class="eachLine">
+        <div class="lineType">秒针颜色</div>
+        <input type="color" id="secondColor" class="lineValue" />
+    </div>
+    <button>Save</button>
+    <br><br>
+    <button>close</button>
+</div>
 </body>
 <script>
     var electron = require('electron');
     var ipc = electron.ipcRenderer;
     var fs = require('fs');
     var textarea = document.getElementsByTagName('textarea')[0];
-    var button = document.getElementsByTagName('button')[0];
+    var save = document.getElementsByTagName('button')[0];
     var close = document.getElementsByTagName('button')[1];
 
     function writeFile() {
-        console.log('asdfaf');
-        var text = textarea.value;
-        fs.writeFileSync('message.txt', text, 'utf8');
+        var text = {
+            "bgColor": document.getElementById('bgColor').value,
+            "hourColor": document.getElementById('hourColor').value,
+            "minuteColor": document.getElementById('minuteColor').value,
+            "secondColor": document.getElementById('secondColor').value,
+        };
+        fs.writeFile('config.txt', JSON.stringify(text), 'utf8', (err)=>{
+            if(err) alert(err);
+            ipc.send('change-color');
+        });
+    }
+    function readFile() {
+        fs.readFile('config.txt', (err, data) => {
+            if (err) throw err;
+            console.log(data);
+            data = JSON.parse(data);
+            document.getElementById('bgColor').value = data.bgColor;
+            document.getElementById('hourColor').value = data.hourColor;
+            document.getElementById('minuteColor').value = data.minuteColor;
+            document.getElementById('secondColor').value = data.secondColor;
+        });
     }
     function closeWin() {
-        ipc.send('close-main-window');
+        ipc.send('close-setting-window');
     }
-    button.onclick = writeFile;
+    readFile();
+    save.onclick = writeFile;
     close.onclick = closeWin;
 
     ipc.on('testShortcut', function (event, message) {

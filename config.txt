@@ -1,0 +1,1 @@
+{"bgColor":"#ffffff","hourColor":"#3e4fc1","minuteColor":"#80de47","secondColor":"#f1d276"}
